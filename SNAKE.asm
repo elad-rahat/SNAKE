@@ -4,11 +4,14 @@ STACK 100h
 DATASEG
 ; --------------------------
 BOARD db 1400 dup (?)
-SNAKE dw 10 dup (?)
+SNAKE dw 40 dup (?)
+snake_lengh db 4
+if_snake_grows db 0
 apple dw ?
 appley db ?
 applex db ?
 clock equ es:6Ch
+WIN_TEXT db 'You win!!! good job',13,10,'$'
 ; --------------------------
 CODESEG
 ;יוצר מיקום של תפוח
@@ -129,16 +132,28 @@ proc CHANGEBOARD
 	push di
 	push si
 	push dx
+	push ax
+	
 	xor di, di
 	xor dx, dx
 	lea bx, [SNAKE]
+	
+	xor ax, ax
+	mov al, [snake_lengh]
+	mov dl, 4
+	mul dl 				;גללל הגרפיקה כל אחד תופס 4
+	mov si, ax
+	mov di, [bx+si]		;שינוי האחרון לנקודה
+	
+	
 	mov si, [bx]		;שינוי הראשון לאיבר שמופיע במערך סנייק
-	mov dl, [bx+2]
-	mov di, [bx+16]		;שינוי האחרון לנקודה
+	mov dl, [bx+2]		;graffic
+	
 	lea bx, [BOARD]
 	mov [byte ptr bx+si], dl
 	mov [byte ptr bx+di], '.'
 
+	pop ax
 	pop dx
 	pop si
 	pop di
@@ -222,13 +237,20 @@ proc ChangeSnake
 	push di
 	push bp
 	push dx
-	mov bp, sp
-	mov ax, [bp+14]			;הערך שהתקבל: 1-4
-	mov cx, 4
-	mov di, 12    ; בגלל שהערך בגודל מילה+יש גרפיקה
+	
+	xor ax, ax
+	xor dx, dx
+	mov al, [snake_lengh]
+	sub al, 1		;נחליף את האחד לפני האחרון,באחרון וכן הלאה. לכן נוריד ב 1
+	mov dl, 4
+	mul dl		;בגלל הגרפיקה, כל אחד תופס 4 מקומות ולא 2
+	mov di, ax
+	
+	mov cl, [snake_lengh]
+	
 	lea bx, [SNAKE]
 LoopChSnake:
-	mov dx, [word bx+di]				;נחליף את ה5 ב4 ואז את ה 4 ב 3 וכו... 
+	mov dx, [word ptr bx+di]				;נחליף את ה5 ב4 ואז את ה 4 ב 3 וכו... 
 	mov [word ptr bx+di+4], dx			;גרפיקה
 	sub di, 4
 	loop LoopChSnake
@@ -242,6 +264,9 @@ LoopChangeGraffic:
 	mov [byte ptr bx+di+4], dl
 	sub di, 4
 	loop LoopChangeGraffic
+
+	mov bp, sp
+	mov ax, [bp+14]			;הערך שהתקבל: 1-4
 	
 right:
 	cmp ax, 1    ;ימינה
@@ -289,8 +314,14 @@ proc check_apple
 	mov di, [apple]
 	cmp [word ptr bx], di		;בדיקה האם הנחש נגע התפוח
 	jne exit_check_apple
+	
 	call create_apple	;יצירת תפוח חדש
 	
+	add [snake_lengh], 1		;הגדלת גודל הנחש
+	
+	cmp [snake_lengh] , 15
+	jl exit_check_apple
+	call win_game
 	
 exit_check_apple:
 	lea bx, [board]		;שינוי הלוח עפ התפוח
@@ -323,6 +354,20 @@ Tick:
 	pop ax
 	ret 
 endp Sleep
+
+proc win_game
+	push bx
+	push ax
+	
+	lea bx, [WIN_TEXT]
+	mov ah, 9h
+	int 21h
+	jmp exit
+	
+	pop ax
+	pop bx
+	ret
+endp win_game
 
 
 start:
@@ -363,6 +408,7 @@ WaitForData:
 	jz WaitForData
 	mov ah, 0
 	int 16h
+	
 	
 	
 check1:
