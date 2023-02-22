@@ -9,17 +9,19 @@ Clock equ es:6Ch
 snake_lengh db 4
 appley dw ?
 applex dw ?
-applenum dw ?
+applenum db ?
 ;text
 WIN_TEXT db 'You won!!! good job',13,10,'$'
-LOSE_TEXT db 'YOU LOSE, TRY AGAIN',13,10,'$'
+LOSE_TEXT db 'YOU LOST, TRY AGAIN',13,10,'$'
 END_ENTER_NUM_TEXT_1 db 'enter num 1:',13,10,'$'
 END_ENTER_NUM_TEXT_2 db 'enter num 2:',13,10,'$'
 END_ENTER_NUM_TEXT_3 db 'enter num 3:',13,10,'$'
+END_ENTER_NUM_TEXT_4 db 'enter num 4:',13,10,'$'
+END_ENTER_NUM_TEXT_5 db 'enter num 5:',13,10,'$'
 
 APPLE_PLACE dw 400 dup (?)
 NUMBER_FOR_THE_APPLE db 0, 7, 5, 2, 3, 1, 9, 0, 6, 2, 8, 3, 2, 1, 5, 9, 4, 1, 3, 3, 2, 1, 9, 5, 4, 3, 1, 4, 4, 4, 3, 9, 1, 6, 4, 2, 1, 9, 2, 2, 4, 2, 1, 8, 0, 0, 0, 1, 3, 5, 5, 1, 6, 4, 7, 1, 9, 1, 6, 2, 6, 8, 1, 7, 1, 7, 2, 8, 7, 2, 7, 5, 5, 8, 8, 5, 3, 8, 0, 0, 8, 6, 5, 2, 9, 9, 4, 8, 4, 5, 9, 3, 6, 2, 5, 9, 1, 2, 9, 4, 7, 7, 0, 5, 4, 0, 1, 4, 0, 8, 0, 7, 1, 1, 5, 9, 2, 4, 5, 7, 1, 2, 6, 5, 1, 9, 1, 5, 7, 5, 4, 1, 9, 8, 6, 6, 6, 9, 7, 2, 5, 5, 5, 7, 8, 1, 2, 8, 5, 0, 9, 0, 8, 8, 0, 9, 9, 7, 9, 7, 5, 3, 1, 6, 6, 6, 5, 4, 7, 2, 4, 9, 5, 9, 7, 7, 2, 8, 3, 4, 0, 3, 3, 5, 9, 4, 6, 4, 7, 2, 7, 0, 9, 4, 4, 8, 7, 7, 9, 3
-THE_CHOSEN_NUMBER_FOR_THE_APPLE dw 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10
+THE_CHOSEN_NUMBER_FOR_THE_APPLE db 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10
 HOW_MUCH_APPLe_CHOSEN dw ?
 
 ;graffic
@@ -1264,14 +1266,75 @@ end_create_apple:
 
 	
 
-	
+	xor ax, ax
 	lea bx, [NUMBER_FOR_THE_APPLE]
 	mov di, [appley]
-	mov si, [bx+di]
-	mov [applenum], si
+	mov al, [bx+di]
+	mov [applenum], al
 	
 
+	push [applex]
+	push [appley]
+	
+check_for_num_0:
+	cmp al, 0
+	jne check_for_num_1
+	call zero_on_apple
+	jmp end_create_num_on_apple
 
+check_for_num_1:
+	cmp al, 1
+	jne check_for_num_2
+	call one_on_apple
+	jmp end_create_num_on_apple
+
+check_for_num_2:
+	cmp al, 2
+	jne check_for_num_3
+	call two_on_apple
+	jmp end_create_num_on_apple
+	
+check_for_num_3:
+	cmp al, 3
+	jne check_for_num_4
+	call three_on_apple
+	jmp end_create_num_on_apple
+	
+check_for_num_4:
+	cmp al, 4
+	jne check_for_num_5
+	call four_on_apple
+	jmp end_create_num_on_apple
+	
+check_for_num_5:
+	cmp al, 5
+	jne check_for_num_6
+	call five_on_apple
+	jmp end_create_num_on_apple
+	
+check_for_num_6:
+	cmp al, 6
+	jne check_for_num_7
+	call six_on_apple
+	jmp end_create_num_on_apple
+	
+check_for_num_7:
+	cmp al, 7
+	jne check_for_num_8
+	call seven_on_apple
+	jmp end_create_num_on_apple	
+	
+check_for_num_8:
+	cmp al, 8
+	jne check_for_num_9
+	call eight_on_apple
+	jmp end_create_num_on_apple	
+	
+	
+check_for_num_9:
+	call nine_on_apple
+	
+	
 
 
 	
@@ -1280,9 +1343,9 @@ end_create_apple:
 end_create_num_on_apple:
 	lea bx, [THE_CHOSEN_NUMBER_FOR_THE_APPLE]
 	mov di, [HOW_MUCH_APPLe_CHOSEN]
-	mov [word ptr bx+di], si
+	mov [byte ptr bx+di], al
 	
-	add [HOW_MUCH_APPLe_CHOSEN], 2
+	add [HOW_MUCH_APPLe_CHOSEN], 1
 	
 
 	
@@ -1774,9 +1837,15 @@ proc check_apple
 	
 	cmp [snake_lengh] , 16
 	jl exit_check_apple
+	
+	mov cx, 10
+loop_sleep_one_sec:
+	call sleep
+	loop loop_sleep_one_sec
 	call win_game
 	
 exit_check_apple:
+	
 
 
 	pop di
@@ -1793,10 +1862,7 @@ proc win_game
 	push di
 	push cx
 	
-	mov cx, 30
-loop_sleep_one_sec:
-	call sleep
-	loop loop_sleep_one_sec
+
 	
 	
 ;text mode
@@ -1804,8 +1870,188 @@ loop_sleep_one_sec:
 	mov al, 2
 	int 10h
 	
+	lea bx, [THE_CHOSEN_NUMBER_FOR_THE_APPLE]
+	xor di, di
+;text
+	push seg END_ENTER_NUM_TEXT_1
+	pop ds
+	mov dx, offset END_ENTER_NUM_TEXT_1
+	mov ah, 9h
+	int 21h
+	
+		
+;קליטת תו	
+	mov ah, 1
+	int 21h
+	sub al, 30h
+
+	
+	
+check_loop_win_1:	
+	cmp [byte ptr bx+di], al
+	je check_loop_win_2
+	add di, 1
+	cmp di, [HOW_MUCH_APPLE_CHOSEN]
+	jle check_loop_win_1
+	
+	call lose_game
+	
+
+	
+	
+check_loop_win_2:
+	;new line
+	mov dl, 10
+	mov ah, 2
+	int 21h
+	;carriage return
+	mov dl, 13
+	mov ah, 2
+	int 21h
+	
+;text
+	push seg END_ENTER_NUM_TEXT_2
+	pop ds
+	mov dx, offset END_ENTER_NUM_TEXT_2
+	mov ah, 9h
+	int 21h
+	
+	xor ax, ax
+	;קליטת תו	
+	mov ah, 1
+	int 21h
+	sub al, 30h
+	add di, 1
+
+loop_check_loop_win_2:
+	cmp [byte ptr bx+di], al
+	je check_loop_win_3
+	add di, 1
+	cmp di, [HOW_MUCH_APPLe_CHOSEN]
+	jle loop_check_loop_win_2
+	
+	call lose_game
+	
+	
+	
+	
+	
+	
+check_loop_win_3:
+	;new line
+	mov dl, 10
+	mov ah, 2
+	int 21h
+	;carriage return
+	mov dl, 13
+	mov ah, 2
+	int 21h
+;text
+	push seg END_ENTER_NUM_TEXT_3
+	pop ds
+	mov dx, offset END_ENTER_NUM_TEXT_3
+	mov ah, 9h
+	int 21h
+	
+	xor ax, ax
+	;קליטת תו	
+	mov ah, 1
+	int 21h
+	sub al, 30h
+	add di, 1
+
+loop_check_loop_win_3:
+	cmp [byte ptr bx+di], al
+	je check_loop_win_4
+	add di, 1
+	cmp di, [HOW_MUCH_APPLe_CHOSEN]
+	jle loop_check_loop_win_3
+	
+	call lose_game
+	
+	
+	
+	
+check_loop_win_4:
+	;new line
+	mov dl, 10
+	mov ah, 2
+	int 21h
+	;carriage return
+	mov dl, 13
+	mov ah, 2
+	int 21h
+;text
+	push seg END_ENTER_NUM_TEXT_4
+	pop ds
+	mov dx, offset END_ENTER_NUM_TEXT_4
+	mov ah, 9h
+	int 21h
+	
+	xor ax, ax
+	;קליטת תו	
+	mov ah, 1
+	int 21h
+	sub al, 30h
+	add di, 1
+
+loop_check_loop_win_4:
+	cmp [byte ptr bx+di], al
+	je check_loop_win_5
+	add di, 1
+	cmp di, [HOW_MUCH_APPLe_CHOSEN]
+	jle loop_check_loop_win_4
+	
+	call lose_game
+	
+	
+check_loop_win_5:
+	;new line
+	mov dl, 10
+	mov ah, 2
+	int 21h
+	;carriage return
+	mov dl, 13
+	mov ah, 2
+	int 21h
+;text
+	push seg END_ENTER_NUM_TEXT_5
+	pop ds
+	mov dx, offset END_ENTER_NUM_TEXT_5
+	mov ah, 9h
+	int 21h
+	
+	xor ax, ax
+	;קליטת תו	
+	mov ah, 1
+	int 21h
+	sub al, 30h
+	add di, 1
+
+loop_check_loop_win_5:
+	cmp [byte ptr bx+di], al
+	je end_win_check_123
+	add di, 1
+	cmp di, [HOW_MUCH_APPLe_CHOSEN]
+	jle loop_check_loop_win_5
+	
+	call lose_game
+	
+	
+	
+	
+end_win_check_123:	
+	
 
 
+	;new line
+	mov dl, 10
+	mov ah, 2
+	int 21h
+	;carriage return
+	mov dl, 13
+	mov ah, 2
+	int 21h
 	
 ;print win massenge	
 	push seg WIN_TEXT
